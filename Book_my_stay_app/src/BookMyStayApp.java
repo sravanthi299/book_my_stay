@@ -1,6 +1,7 @@
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.HashMap;
+import java.util.Map;
 
+// Reservation class
 class Reservation {
     private String guestName;
     private String roomType;
@@ -19,46 +20,67 @@ class Reservation {
     }
 }
 
-class BookingRequestQueue {
-    private Queue<Reservation> queue = new LinkedList<>();
+// Room Inventory
+class RoomInventory {
+    private Map<String, Integer> availableRooms = new HashMap<>();
 
-    public void addRequest(Reservation r) {
-        queue.add(r);
+    public RoomInventory() {
+        availableRooms.put("Single", 2);
+        availableRooms.put("Double", 2);
+        availableRooms.put("Suite", 1);
     }
 
-    public boolean hasPendingRequests() {
-        return !queue.isEmpty();
+    public boolean isAvailable(String roomType) {
+        return availableRooms.getOrDefault(roomType, 0) > 0;
     }
 
-    public Reservation processRequest() {
-        return queue.poll(); // FIFO
+    public void reduceRoom(String roomType) {
+        availableRooms.put(roomType, availableRooms.get(roomType) - 1);
     }
 }
 
-public class BookMyStayApp {
+// Allocation Service
+class RoomAllocationService {
+    private Map<String, Integer> roomCounters = new HashMap<>();
+
+    public void allocateRoom(Reservation reservation, RoomInventory inventory) {
+        String type = reservation.getRoomType();
+
+        if (inventory.isAvailable(type)) {
+            String roomId = generateRoomId(type);
+            inventory.reduceRoom(type);
+
+            System.out.println("Booking confirmed for Guest: "
+                    + reservation.getGuestName()
+                    + ", Room ID: " + roomId);
+        } else {
+            System.out.println("No rooms available for " + type);
+        }
+    }
+
+    private String generateRoomId(String roomType) {
+        int count = roomCounters.getOrDefault(roomType, 0) + 1;
+        roomCounters.put(roomType, count);
+        return roomType + "-" + count;
+    }
+}
+
+// Main Class
+public class BookMyStayApp{
+
     public static void main(String[] args) {
 
-        // Display application header
-        System.out.println("Booking Request Queue");
+        System.out.println("Room Allocation Processing");
 
-        // Initialize booking queue
-        BookingRequestQueue bookingQueue = new BookingRequestQueue();
+        RoomInventory inventory = new RoomInventory();
+        RoomAllocationService service = new RoomAllocationService();
 
-        // Create booking requests
         Reservation r1 = new Reservation("Abhi", "Single");
         Reservation r2 = new Reservation("Subha", "Double");
         Reservation r3 = new Reservation("Vanmathi", "Suite");
 
-        // Add requests to the queue
-        bookingQueue.addRequest(r1);
-        bookingQueue.addRequest(r2);
-        bookingQueue.addRequest(r3);
-
-        // Process requests in FIFO order
-        while (bookingQueue.hasPendingRequests()) {
-            Reservation r = bookingQueue.processRequest();
-            System.out.println("Processing booking for Guest: "
-                    + r.getGuestName() + ", Room Type: " + r.getRoomType());
-        }
+        service.allocateRoom(r1, inventory);
+        service.allocateRoom(r2, inventory);
+        service.allocateRoom(r3, inventory);
     }
 }
