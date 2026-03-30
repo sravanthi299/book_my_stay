@@ -1,38 +1,64 @@
-class Room {
-    String type;
-    int beds;
-    int size;
-    double price;
-    int available;
+import java.util.LinkedList;
+import java.util.Queue;
 
-    Room(String type, int beds, int size, double price, int available) {
-        this.type = type;
-        this.beds = beds;
-        this.size = size;
-        this.price = price;
-        this.available = available;
+class Reservation {
+    private String guestName;
+    private String roomType;
+
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
     }
 
-    void display() {
-        System.out.println(type + ":");
-        System.out.println("Beds: " + beds);
-        System.out.println("Size: " + size + " sqft");
-        System.out.println("Price per night: " + price);
-        System.out.println("Available: " + available);
-        System.out.println();
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public String getRoomType() {
+        return roomType;
     }
 }
 
-public class BookMyStayApp{
+class BookingRequestQueue {
+    private Queue<Reservation> queue = new LinkedList<>();
+
+    public void addRequest(Reservation r) {
+        queue.add(r);
+    }
+
+    public boolean hasPendingRequests() {
+        return !queue.isEmpty();
+    }
+
+    public Reservation processRequest() {
+        return queue.poll(); // FIFO
+    }
+}
+
+public class BookMyStayApp {
     public static void main(String[] args) {
-        System.out.println("Room Search\n");
 
-        Room r1 = new Room("Single Room", 1, 250, 1500.0, 5);
-        Room r2 = new Room("Double Room", 2, 400, 2500.0, 3);
-        Room r3 = new Room("Suite Room", 3, 750, 5000.0, 2);
+        // Display application header
+        System.out.println("Booking Request Queue");
 
-        r1.display();
-        r2.display();
-        r3.display();
+        // Initialize booking queue
+        BookingRequestQueue bookingQueue = new BookingRequestQueue();
+
+        // Create booking requests
+        Reservation r1 = new Reservation("Abhi", "Single");
+        Reservation r2 = new Reservation("Subha", "Double");
+        Reservation r3 = new Reservation("Vanmathi", "Suite");
+
+        // Add requests to the queue
+        bookingQueue.addRequest(r1);
+        bookingQueue.addRequest(r2);
+        bookingQueue.addRequest(r3);
+
+        // Process requests in FIFO order
+        while (bookingQueue.hasPendingRequests()) {
+            Reservation r = bookingQueue.processRequest();
+            System.out.println("Processing booking for Guest: "
+                    + r.getGuestName() + ", Room Type: " + r.getRoomType());
+        }
     }
 }
