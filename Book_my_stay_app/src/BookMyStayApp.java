@@ -1,52 +1,56 @@
 import java.util.*;
 
-class Service {
-    String name;
-    double cost;
+// Booking class
+class Booking {
+    String guestName;
+    String roomType;
 
-    public Service(String name, double cost) {
-        this.name = name;
-        this.cost = cost;
+    public Booking(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
     }
 }
 
-class ReservationService {
-    private Map<String, List<Service>> reservationMap = new HashMap<>();
+// BookingHistory class
+class BookingHistory {
+    private List<Booking> bookings = new ArrayList<>();
 
-    public void addService(String reservationId, Service service) {
-        reservationMap.putIfAbsent(reservationId, new ArrayList<>());
-        reservationMap.get(reservationId).add(service);
+    public void addBooking(Booking booking) {
+        bookings.add(booking);
     }
 
-    public double calculateTotalServiceCost(String reservationId) {
-        double total = 0;
-        if (reservationMap.containsKey(reservationId)) {
-            for (Service s : reservationMap.get(reservationId)) {
-                total += s.cost;
-            }
+    public List<Booking> getBookings() {
+        return bookings;
+    }
+}
+
+// BookingReportService class
+class BookingReportService {
+
+    public void generateReport(BookingHistory history) {
+        System.out.println("\nBooking History Report\n");
+
+        for (Booking b : history.getBookings()) {
+            System.out.println("Guest: " + b.guestName + ", Room Type: " + b.roomType);
         }
-        return total;
     }
 }
 
+// MAIN CLASS
 public class BookMyStayApp {
     public static void main(String[] args) {
 
-        ReservationService rs = new ReservationService();
+        BookingHistory history = new BookingHistory();
 
-        String reservationId = "Single-1";
+        // Adding bookings
+        history.addBooking(new Booking("Abhi", "Single"));
+        history.addBooking(new Booking("Subha", "Double"));
+        history.addBooking(new Booking("Vannathi", "Suite"));
 
-        // Adding services
-        rs.addService(reservationId, new Service("Breakfast", 500));
-        rs.addService(reservationId, new Service("Spa", 700));
-        rs.addService(reservationId, new Service("Airport Pickup", 300));
+        // Generate report
+        BookingReportService reportService = new BookingReportService();
 
-        // Calculate total cost
-        double totalCost = rs.calculateTotalServiceCost(reservationId);
-
-        // Output
-        System.out.println("Add-On Service Selection");
-        System.out.println("Reservation ID: " + reservationId);
-        System.out.println("Total Add-On Cost: " + totalCost);
+        System.out.println("Booking History and Reporting");
+        reportService.generateReport(history);
     }
 }
