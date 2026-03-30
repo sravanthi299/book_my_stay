@@ -1,62 +1,93 @@
+import java.io.*;
 import java.util.*;
 
-// Room Inventory Class (Shared Resource)
+// Room Inventory Class
 class RoomInventory {
-    private int availableRooms = 1; // Only 1 room to show race condition clearly
+    private Map<String, Integer> rooms = new HashMap<>();
 
-    // Synchronized method to avoid race condition
-    public synchronized boolean bookRoom(String user) {
-        if (availableRooms > 0) {
-            System.out.println(user + " is trying to book...");
+    public RoomInventory() {
+        rooms.put("Single", 5);
+        rooms.put("Double", 3);
+        rooms.put("Suite", 2);
+    }
 
-            try {
-                Thread.sleep(1000); // simulate delay
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    public Map<String, Integer> getRooms() {
+        return rooms;
+    }
 
-            availableRooms--;
-            System.out.println(user + " successfully booked the room.");
-            return true;
-        } else {
-            System.out.println(user + " failed to book. No rooms available.");
-            return false;
+    public void setRooms(Map<String, Integer> rooms) {
+        this.rooms = rooms;
+    }
+
+    public void display() {
+        System.out.println("Current Inventory:");
+        for (String type : rooms.keySet()) {
+            System.out.println(type + ": " + rooms.get(type));
         }
     }
 }
 
-// User Thread Class
-class BookingThread extends Thread {
-    private RoomInventory inventory;
-    private String userName;
+// Persistence Manager Class
+class PersistenceManager {
 
-    public BookingThread(RoomInventory inventory, String userName) {
-        this.inventory = inventory;
-        this.userName = userName;
+    // Save inventory to file
+    public void saveInventory(RoomInventory inventory, String filePath) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            for (Map.Entry<String, Integer> entry : inventory.getRooms().entrySet()) {
+                writer.write(entry.getKey() + "," + entry.getValue());
+                writer.newLine();
+            }
+            System.out.println("Inventory saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Error saving inventory: " + e.getMessage());
+        }
     }
 
-    public void run() {
-        inventory.bookRoom(userName);
+    // Load inventory from file
+    public void loadInventory(RoomInventory inventory, String filePath) {
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            System.out.println("No valid inventory data found. Starting fresh.");
+            return;
+        }
+
+        Map<String, Integer> rooms = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                rooms.put(parts[0], Integer.parseInt(parts[1]));
+            }
+            inventory.setRooms(rooms);
+            System.out.println("Inventory loaded successfully.");
+        } catch (IOException e) {
+            System.out.println("Error loading inventory: " + e.getMessage());
+        }
     }
 }
 
 // Main Class
-public class BookMyStayApp {
+public class BookMyStayApp{
 
     public static void main(String[] args) {
 
-        System.out.println("Concurrent Booking Simulation\n");
+        System.out.println("System Recovery");
 
         RoomInventory inventory = new RoomInventory();
+        PersistenceManager manager = new PersistenceManager();
 
-        // Multiple users (threads)
-        Thread user1 = new BookingThread(inventory, "User1");
-        Thread user2 = new BookingThread(inventory, "User2");
-        Thread user3 = new BookingThread(inventory, "User3");
+        String filePath = "inventory.txt";
 
-        // Start threads simultaneously
-        user1.start();
-        user2.start();
-        user3.start();
+        // Load previous data
+        manager.loadInventory(inventory, filePath);
+
+        // Display inventory
+        System.out.println();
+        inventory.display();
+
+        // Save inventory
+        manager.saveInventory(inventory, filePath);
     }
 }
